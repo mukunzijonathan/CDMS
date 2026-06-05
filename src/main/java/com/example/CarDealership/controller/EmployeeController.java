@@ -2,7 +2,6 @@ package com.example.CarDealership.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,11 +21,12 @@ import com.example.CarDealership.service.EmployeeService;
 @RequestMapping("/api/employees")
 public class EmployeeController {
 
-    @Autowired
-    private EmployeeService employeeService;
+    private final EmployeeService employeeService;
 
-    // POST — Add an employee
-    // Usage: POST /api/employees/add
+    public EmployeeController(EmployeeService employeeService) {
+        this.employeeService = employeeService;
+    }
+
     @PostMapping(value = "/add", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> addEmployee(@RequestBody Employee employee) {
         String response = employeeService.saveEmployee(employee);
@@ -36,8 +36,6 @@ public class EmployeeController {
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
-    // GET — All employees
-    // Usage: GET /api/employees/all
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAllEmployees() {
         List<Employee> employees = employeeService.getAllEmployees();
@@ -47,8 +45,6 @@ public class EmployeeController {
         return new ResponseEntity<>(employees, HttpStatus.OK);
     }
 
-    // GET — By ID
-    // Usage: GET /api/employees/getById?id=1
     @GetMapping(value = "/getById", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getEmployeeById(@RequestParam Long id) {
         return employeeService.getEmployeeById(id)
@@ -56,30 +52,33 @@ public class EmployeeController {
             .orElse(new ResponseEntity<>("Employee not found.", HttpStatus.NOT_FOUND));
     }
 
-    // GET — By location name
-    // Usage: GET /api/employees/location?name=Gasabo
     @GetMapping(value = "/location", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getByLocationName(@RequestParam String name) {
         List<Employee> employees = employeeService.getEmployeesByLocationName(name);
         if (employees.isEmpty()) {
-            return new ResponseEntity<>("No employees found for location: " + name, HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("No employees found for the specified location.", HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(employees, HttpStatus.OK);
     }
 
-    // GET — By province name (traverses full tree)
-    // Usage: GET /api/employees/province?name=Kigali
     @GetMapping(value = "/province", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getByProvince(@RequestParam String name) {
         List<Employee> employees = employeeService.getEmployeesByProvince(name);
         if (employees.isEmpty()) {
-            return new ResponseEntity<>("No employees found in province: " + name, HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("No employees found in the specified province.", HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(employees, HttpStatus.OK);
     }
 
-    // PUT — Update
-    // Usage: PUT /api/employees/update?id=1
+    @GetMapping(value = "/provinceId", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getByProvinceId(@RequestParam String id) {
+        List<Employee> employees = employeeService.getEmployeesByProvinceId(id);
+        if (employees.isEmpty()) {
+            return new ResponseEntity<>("No employees found for the specified province.", HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(employees, HttpStatus.OK);
+    }
+
     @PutMapping(value = "/update", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updateEmployee(@RequestParam Long id, @RequestBody Employee employee) {
         String response = employeeService.updateEmployee(id, employee);
@@ -89,8 +88,6 @@ public class EmployeeController {
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
-    // DELETE
-    // Usage: DELETE /api/employees/delete?id=1
     @DeleteMapping(value = "/delete")
     public ResponseEntity<?> deleteEmployee(@RequestParam Long id) {
         String response = employeeService.deleteEmployee(id);
@@ -99,15 +96,4 @@ public class EmployeeController {
         }
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
-
-    // GET — By province UUID
-// Usage: GET /api/employees/provinceId?id=uuid
-@GetMapping(value = "/provinceId", produces = MediaType.APPLICATION_JSON_VALUE)
-public ResponseEntity<?> getByProvinceId(@RequestParam String id) {
-    List<Employee> employees = employeeService.getEmployeesByProvinceId(id);
-    if (employees.isEmpty()) {
-        return new ResponseEntity<>("No employees found for province ID: " + id, HttpStatus.NOT_FOUND);
-    }
-    return new ResponseEntity<>(employees, HttpStatus.OK);
-}
 }

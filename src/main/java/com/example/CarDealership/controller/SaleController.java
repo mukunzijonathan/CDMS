@@ -2,7 +2,6 @@ package com.example.CarDealership.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,11 +21,12 @@ import com.example.CarDealership.service.SaleService;
 @RequestMapping("/api/sales")
 public class SaleController {
 
-    @Autowired
-    private SaleService saleService;
+    private final SaleService saleService;
 
-    // POST — Create a sale
-    // Usage: POST /api/sales/add
+    public SaleController(SaleService saleService) {
+        this.saleService = saleService;
+    }
+
     @PostMapping(value = "/add", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> addSale(@RequestBody Sale sale) {
         String response = saleService.saveSale(sale);
@@ -36,8 +36,6 @@ public class SaleController {
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
-    // GET — All sales
-    // Usage: GET /api/sales/all
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAllSales() {
         List<Sale> sales = saleService.getAllSales();
@@ -47,8 +45,6 @@ public class SaleController {
         return new ResponseEntity<>(sales, HttpStatus.OK);
     }
 
-    // GET — By ID
-    // Usage: GET /api/sales/getById?id=1
     @GetMapping(value = "/getById", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getSaleById(@RequestParam Long id) {
         return saleService.getSaleById(id)
@@ -56,8 +52,6 @@ public class SaleController {
             .orElse(new ResponseEntity<>("Sale not found.", HttpStatus.NOT_FOUND));
     }
 
-    // GET — By customer
-    // Usage: GET /api/sales/customer?customerId=uuid
     @GetMapping(value = "/customer", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getSalesByCustomer(@RequestParam String customerId) {
         List<Sale> sales = saleService.getSalesByCustomer(customerId);
@@ -67,8 +61,6 @@ public class SaleController {
         return new ResponseEntity<>(sales, HttpStatus.OK);
     }
 
-    // GET — By employee
-    // Usage: GET /api/sales/employee?employeeId=1
     @GetMapping(value = "/employee", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getSalesByEmployee(@RequestParam Long employeeId) {
         List<Sale> sales = saleService.getSalesByEmployee(employeeId);
@@ -78,19 +70,15 @@ public class SaleController {
         return new ResponseEntity<>(sales, HttpStatus.OK);
     }
 
-    // GET — By payment method
-    // Usage: GET /api/sales/payment?paymentMethod=CASH
     @GetMapping(value = "/payment", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getSalesByPaymentMethod(@RequestParam Sale.PaymentMethod paymentMethod) {
         List<Sale> sales = saleService.getSalesByPaymentMethod(paymentMethod);
         if (sales.isEmpty()) {
-            return new ResponseEntity<>("No sales found for: " + paymentMethod, HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("No sales found for the specified payment method.", HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(sales, HttpStatus.OK);
     }
 
-    // PUT — Update
-    // Usage: PUT /api/sales/update?id=1
     @PutMapping(value = "/update", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updateSale(@RequestParam Long id, @RequestBody Sale sale) {
         String response = saleService.updateSale(id, sale);
@@ -100,8 +88,6 @@ public class SaleController {
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
-    // DELETE
-    // Usage: DELETE /api/sales/delete?id=1
     @DeleteMapping(value = "/delete")
     public ResponseEntity<?> deleteSale(@RequestParam Long id) {
         String response = saleService.deleteSale(id);

@@ -3,7 +3,6 @@ package com.example.CarDealership.service;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.CarDealership.model.Sale;
@@ -12,8 +11,11 @@ import com.example.CarDealership.repository.SaleRepository;
 @Service
 public class SaleService {
 
-    @Autowired
-    private SaleRepository saleRepository;
+    private final SaleRepository saleRepository;
+
+    public SaleService(SaleRepository saleRepository) {
+        this.saleRepository = saleRepository;
+    }
 
     public String saveSale(Sale sale) {
         saleRepository.save(sale);

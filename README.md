@@ -80,10 +80,12 @@ CREATE DATABASE "car-dealership";
 ```
  
 ### application.properties
+Copy `application.properties.example` to `application.properties` and fill in your credentials:
+
 ```properties
 spring.datasource.url=jdbc:postgresql://localhost:5432/car-dealership
-spring.datasource.username=postgres
-spring.datasource.password=(can't show my password)
+spring.datasource.username=your_db_username
+spring.datasource.password=your_db_password
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 ```

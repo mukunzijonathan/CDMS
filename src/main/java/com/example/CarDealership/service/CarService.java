@@ -3,7 +3,6 @@ package com.example.CarDealership.service;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -16,8 +15,11 @@ import com.example.CarDealership.repository.CarRepository;
 @Service
 public class CarService {
 
-    @Autowired
-    private CarRepository carRepository;
+    private final CarRepository carRepository;
+
+    public CarService(CarRepository carRepository) {
+        this.carRepository = carRepository;
+    }
 
     public String saveCar(Car car) {
         if (carRepository.existsByBrandAndModelAndYear(

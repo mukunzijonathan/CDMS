@@ -3,7 +3,6 @@ package com.example.CarDealership.service;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.CarDealership.model.Customer;
@@ -12,8 +11,11 @@ import com.example.CarDealership.repository.CustomerRepository;
 @Service
 public class CustomerService {
 
-    @Autowired
-    private CustomerRepository customerRepository;
+    private final CustomerRepository customerRepository;
+
+    public CustomerService(CustomerRepository customerRepository) {
+        this.customerRepository = customerRepository;
+    }
 
     public String saveCustomer(Customer customer) {
         if (customerRepository.existsByEmail(customer.getEmail())) {

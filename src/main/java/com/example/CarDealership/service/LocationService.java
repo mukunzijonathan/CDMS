@@ -3,7 +3,6 @@ package com.example.CarDealership.service;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.CarDealership.model.Location;
@@ -12,8 +11,11 @@ import com.example.CarDealership.repository.LocationRepository;
 @Service
 public class LocationService {
 
-    @Autowired
-    private LocationRepository locationRepository;
+    private final LocationRepository locationRepository;
+
+    public LocationService(LocationRepository locationRepository) {
+        this.locationRepository = locationRepository;
+    }
 
     public String saveLocation(Location location) {
         if (locationRepository.existsByNameAndType(

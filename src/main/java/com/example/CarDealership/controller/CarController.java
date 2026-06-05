@@ -2,7 +2,6 @@ package com.example.CarDealership.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -23,11 +22,12 @@ import com.example.CarDealership.service.CarService;
 @RequestMapping("/api/cars")
 public class CarController {
 
-    @Autowired
-    private CarService carService;
+    private final CarService carService;
 
-    // POST — Add a car
-    // Usage: POST /api/cars/add
+    public CarController(CarService carService) {
+        this.carService = carService;
+    }
+
     @PostMapping(value = "/add", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> addCar(@RequestBody Car car) {
         String response = carService.saveCar(car);
@@ -37,8 +37,6 @@ public class CarController {
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
-    // GET — All cars
-    // Usage: GET /api/cars/all
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAllCars() {
         List<Car> cars = carService.getAllCars();
@@ -48,18 +46,17 @@ public class CarController {
         return new ResponseEntity<>(cars, HttpStatus.OK);
     }
 
-    // GET — Paginated
-    // Usage: GET /api/cars/paginated?page=0&size=5
     @GetMapping(value = "/paginated", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getCarsPaginated(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size) {
+        if (page < 0 || size < 1) {
+            return new ResponseEntity<>("Invalid page or size parameters.", HttpStatus.BAD_REQUEST);
+        }
         Page<Car> cars = carService.getAllCarsPaginated(page, size);
         return new ResponseEntity<>(cars, HttpStatus.OK);
     }
 
-    // GET — Sorted by price ascending
-    // Usage: GET /api/cars/sorted/price
     @GetMapping(value = "/sorted/price", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getCarsSortedByPrice() {
         List<Car> cars = carService.getAllCarsSortedByPrice();
@@ -69,8 +66,6 @@ public class CarController {
         return new ResponseEntity<>(cars, HttpStatus.OK);
     }
 
-    // GET — Sorted by year descending
-    // Usage: GET /api/cars/sorted/year
     @GetMapping(value = "/sorted/year", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getCarsSortedByYear() {
         List<Car> cars = carService.getAllCarsSortedByYear();
@@ -80,8 +75,6 @@ public class CarController {
         return new ResponseEntity<>(cars, HttpStatus.OK);
     }
 
-    // GET — By ID
-    // Usage: GET /api/cars/getById?id=5
     @GetMapping(value = "/getById", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getCarById(@RequestParam Long id) {
         return carService.getCarById(id)
@@ -89,19 +82,15 @@ public class CarController {
             .orElse(new ResponseEntity<>("Car not found.", HttpStatus.NOT_FOUND));
     }
 
-    // GET — By brand
-    // Usage: GET /api/cars/brand?brand=Toyota
     @GetMapping(value = "/brand", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getCarsByBrand(@RequestParam String brand) {
         List<Car> cars = carService.getCarsByBrand(brand);
         if (cars.isEmpty()) {
-            return new ResponseEntity<>("No cars found for brand: " + brand, HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("No cars found for the specified brand.", HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(cars, HttpStatus.OK);
     }
 
-    // PUT — Update
-    // Usage: PUT /api/cars/update?id=5
     @PutMapping(value = "/update", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updateCar(@RequestParam Long id, @RequestBody Car car) {
         String response = carService.updateCar(id, car);
@@ -111,8 +100,6 @@ public class CarController {
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
-    // DELETE
-    // Usage: DELETE /api/cars/delete?id=5
     @DeleteMapping(value = "/delete")
     public ResponseEntity<?> deleteCar(@RequestParam Long id) {
         String response = carService.deleteCar(id);
