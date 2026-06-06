@@ -1,203 +1,128 @@
-# Car Dealership Management System
-**Mid-Term Exam — Web Technology**  
-**Student:** Mukunzi Jonathan | **ID:** 27132   
+# 🚗 Car Dealership Management System
+
+A RESTful API built with Spring Boot for managing a car dealership — covering cars, customers, employees, sales, and a full Rwanda administrative location hierarchy.
+
+![Java](https://img.shields.io/badge/Java-21-orange?logo=java)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.0.3-brightgreen?logo=springboot)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-blue?logo=postgresql)
+![Maven](https://img.shields.io/badge/Build-Maven-red?logo=apachemaven)
+
 ---
- 
-## Project Overview
- 
-A Spring Boot REST API managing a car dealership system with 5 entities and a full Rwanda administrative location hierarchy tree. Built with Java 21, Spring Boot, Spring Data JPA, and PostgreSQL.
- 
+
+## ERD
+
+<img src="screenshots/ERD.png" width="700"/>
+
 ---
- 
+
 ## Tech Stack
- 
-| Layer | Technology |
-|-------|-----------|
-| Framework | Spring Boot 4.x |
-| Language | Java 21 |
-| Database | PostgreSQL 18 |
-| ORM | Spring Data JPA / Hibernate |
-| Build | Maven |
- 
+
+| Layer     | Technology                  |
+|-----------|-----------------------------|
+| Framework | Spring Boot 4.0.3           |
+| Language  | Java 21                     |
+| Database  | PostgreSQL                  |
+| ORM       | Spring Data JPA / Hibernate |
+| Docs      | Springdoc OpenAPI (Swagger) |
+| Build     | Maven                       |
+
 ---
- 
-## Entity Relationship Summary
- 
-```
-Location (UUID)  ──self-ref──►  Location (Province > District > Sector > Cell > Village)
-Customer (UUID)  ──ManyToOne──► Location (Village level)
-Employee (Long)  ──ManyToOne──► Location
-Sale (Long)      ──ManyToOne──► Customer
-Sale (Long)      ──ManyToOne──► Employee
-Sale (Long)      ──ManyToMany─► Car  (via sale_car join table)
-Car (Long)       ──ManyToMany─► Sale (mapped by "cars")
-```
- 
----
- 
-## Project Structure
- 
-```
-src/main/java/com/example/CarDealership/
-├── model/
-│   ├── Location.java         # UUID PK, self-referencing tree
-│   ├── Customer.java         # UUID PK, ManyToOne → Location
-│   ├── Car.java              # Long PK, ManyToMany ↔ Sale
-│   ├── Employee.java         # Long PK, ManyToOne → Location
-│   └── Sale.java             # Long PK, ManyToMany → Car, ManyToOne → Customer + Employee
-├── repository/
-│   ├── LocationRepository.java
-│   ├── CustomerRepository.java   # @Query province traversal methods
-│   ├── CarRepository.java        # Page<Car> + Sort methods
-│   ├── EmployeeRepository.java   # @Query province traversal methods
-│   └── SaleRepository.java
-├── service/
-│   ├── LocationService.java
-│   ├── CustomerService.java      # existsByEmail duplicate check
-│   ├── CarService.java           # pagination + sorting logic
-│   ├── EmployeeService.java
-│   └── SaleService.java
-└── controller/
-    ├── LocationController.java
-    ├── CustomerController.java
-    ├── CarController.java
-    ├── EmployeeController.java
-    └── SaleController.java
-```
- 
----
- 
-## Setup & Running
- 
+
+## Getting Started
+
 ### Prerequisites
-- Java 17+
-- PostgreSQL running on port 5432
+- Java 21+
+- PostgreSQL running on port `5432`
 - Maven
- 
-### Database Setup
+
+### 1. Create the database
 ```sql
 CREATE DATABASE "car-dealership";
 ```
- 
-### application.properties
-Copy `application.properties.example` to `application.properties` and fill in your credentials:
 
+### 2. Configure credentials
+Copy `application.properties.example` → `application.properties` and fill in your values:
 ```properties
 spring.datasource.url=jdbc:postgresql://localhost:5432/car-dealership
-spring.datasource.username=your_db_username
-spring.datasource.password=your_db_password
+spring.datasource.username=your_username
+spring.datasource.password=your_password
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 ```
- 
-### Run the application
+
+### 3. Run
 ```bash
 mvn spring-boot:run
 ```
-App starts on `http://localhost:8080`
- 
+API available at `http://localhost:8080`  
+Swagger UI at `http://localhost:8080/swagger-ui/index.html`
+
 ---
- 
+
 ## API Endpoints
- 
+
 ### Location
-| Method | URL | Description |
-|--------|-----|-------------|
-| POST | `/api/locations/add` | Save a location (Province to Village) |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/locations/add` | Add a location |
 | GET | `/api/locations/all` | Get all locations |
 | GET | `/api/locations/provinces` | Get all provinces |
 | GET | `/api/locations/children?parentId=` | Get children of a location |
 | GET | `/api/locations/getById?id=` | Get location by UUID |
- 
+
 ### Customer
-| Method | URL | Description |
-|--------|-----|-------------|
-| POST | `/api/customers/add` | Save customer (Village UUID required) |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/customers/add` | Add customer |
 | GET | `/api/customers/all` | Get all customers |
-| GET | `/api/customers/getById?id=` | Get customer by UUID |
-| GET | `/api/customers/province?name=Kigali` | Get customers by province name |
-| GET | `/api/customers/provinceId?id=` | Get customers by province UUID |
+| GET | `/api/customers/getById?id=` | Get by UUID |
+| GET | `/api/customers/province?name=` | Filter by province name |
+| GET | `/api/customers/provinceId?id=` | Filter by province UUID |
 | PUT | `/api/customers/update?id=` | Update customer |
 | DELETE | `/api/customers/delete?id=` | Delete customer |
- 
+
 ### Car
-| Method | URL | Description |
-|--------|-----|-------------|
-| POST | `/api/cars/add` | Save car (existsBy brand+model+year) |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/cars/add` | Add car |
 | GET | `/api/cars/all` | Get all cars |
-| GET | `/api/cars/paginated?page=0&size=5` | Paginated cars |
-| GET | `/api/cars/sorted/price` | Cars sorted by price (ASC) |
-| GET | `/api/cars/sorted/year` | Cars sorted by year (DESC) |
- 
+| GET | `/api/cars/paginated?page=0&size=5` | Paginated list |
+| GET | `/api/cars/sorted/price` | Sort by price (ASC) |
+| GET | `/api/cars/sorted/year` | Sort by year (DESC) |
+
 ### Employee
-| Method | URL | Description |
-|--------|-----|-------------|
-| POST | `/api/employees/add` | Save employee |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/employees/add` | Add employee |
 | GET | `/api/employees/all` | Get all employees |
-| GET | `/api/employees/province?name=` | Employees by province name |
-| GET | `/api/employees/provinceId?id=` | Employees by province UUID |
- 
+| GET | `/api/employees/province?name=` | Filter by province name |
+| GET | `/api/employees/provinceId?id=` | Filter by province UUID |
+
 ### Sale
-| Method | URL | Description |
-|--------|-----|-------------|
-| POST | `/api/sales/add` | Save sale with list of cars (Many-to-Many) |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/sales/add` | Create sale (links multiple cars) |
 | GET | `/api/sales/all` | Get all sales |
-| GET | `/api/sales/getById?id=` | Get sale by ID (shows linked cars) |
- 
+| GET | `/api/sales/getById?id=` | Get sale with linked cars |
+
 ---
- 
-## Key Implementation Highlights
- 
-### 1. Self-Referencing Location Tree
-```java
-@ManyToOne
-@JoinColumn(name = "parent_id")
-private Location parent;  // Province has parent = null
+
+## Project Structure
+
 ```
- 
-### 2. Province Query (traverses 4 levels)
-```java
-@Query("SELECT c FROM Customer c WHERE " +
-       "c.location.name = :name OR " +
-       "c.location.parent.name = :name OR " +
-       "c.location.parent.parent.name = :name OR " +
-       "c.location.parent.parent.parent.name = :name OR " +
-       "c.location.parent.parent.parent.parent.name = :name")
-List<Customer> findByProvinceName(@Param("name") String name);
-```
- 
-### 3. Pagination
-```java
-Pageable pageable = PageRequest.of(page, size);
-return carRepository.findAll(pageable);
-```
- 
-### 4. Sorting
-```java
-return carRepository.findAll(Sort.by(Sort.Direction.ASC, "price"));
-```
- 
-### 5. existsBy Duplicate Prevention
-```java
-if (customerRepository.existsByEmail(customer.getEmail())) {
-    return "Customer with this email already exists";
-}
-```
- 
-### 6. Many-to-Many Join Table
-```java
-@ManyToMany
-@JoinTable(name = "sale_car",
-    joinColumns = @JoinColumn(name = "sale_id"),
-    inverseJoinColumns = @JoinColumn(name = "car_id"))
-private List<Car> cars;
+src/main/java/com/example/CarDealership/
+├── model/        # JPA entities (Location, Customer, Car, Employee, Sale)
+├── repository/   # Spring Data repositories with custom @Query methods
+├── service/      # Business logic layer
+└── controller/   # REST controllers
 ```
 
-### ERD
-
-### Entity Relationship Diagram (ERD)
-
-<img src="screenshots/ERD.png" width="700">
 ---
- 
----
+
+## Key Features
+
+- **Self-referencing location tree** — Province → District → Sector → Cell → Village
+- **Province-level queries** — JPQL traverses up to 4 parent levels
+- **Pagination & sorting** — on Car listings
+- **Duplicate prevention** — `existsByEmail` check on Customer
+- **Many-to-Many sales** — Sale ↔ Car via `sale_car` join table
