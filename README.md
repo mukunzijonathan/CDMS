@@ -1,6 +1,6 @@
 # 🚗 Car Dealership Management System
 
-A RESTful API built with Spring Boot for managing a car dealership — covering cars, customers, employees, sales, and a full Rwanda administrative location hierarchy.
+A RESTful API (academic project)built with Spring Boot for managing a car dealership — covering cars, customers, employees, sales, and a full Rwanda administrative location hierarchy.
 
 ![Java](https://img.shields.io/badge/Java-21-orange?logo=java)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.0.3-brightgreen?logo=springboot)
