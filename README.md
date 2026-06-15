@@ -37,7 +37,7 @@ A RESTful API (academic project)built with Spring Boot for managing a car dealer
 
 ### 1. Create the database
 ```sql
-CREATE DATABASE "car-dealership";
+CREATE DATABASE "your-db-name";
 ```
 
 ### 2. Configure credentials
@@ -54,7 +54,7 @@ spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 ```bash
 mvn spring-boot:run
 ```
-API available at `http://localhost:8080`  
+API available at `http://localhost:"your-port"`  
 Swagger UI at `http://localhost:8080/swagger-ui/index.html`
 
 ---
