@@ -52,6 +52,7 @@ spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 
 ### 3. Run
 ```bash
+mvn clean install
 mvn spring-boot:run
 ```
 API available at `http://localhost:"your-port"`  
