@@ -1,68 +1,109 @@
 package com.example.CarDealership.service;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.example.CarDealership.dto.SaleRequest;
+import com.example.CarDealership.dto.SaleResponse;
+import com.example.CarDealership.exception.ResourceNotFoundException;
+import com.example.CarDealership.model.Car;
+import com.example.CarDealership.model.Customer;
+import com.example.CarDealership.model.Employee;
 import com.example.CarDealership.model.Sale;
+import com.example.CarDealership.repository.CarRepository;
+import com.example.CarDealership.repository.CustomerRepository;
+import com.example.CarDealership.repository.EmployeeRepository;
 import com.example.CarDealership.repository.SaleRepository;
 
 @Service
 public class SaleService {
 
     private final SaleRepository saleRepository;
+    private final CustomerRepository customerRepository;
+    private final EmployeeRepository employeeRepository;
+    private final CarRepository carRepository;
 
-    public SaleService(SaleRepository saleRepository) {
+    public SaleService(SaleRepository saleRepository,
+                       CustomerRepository customerRepository,
+                       EmployeeRepository employeeRepository,
+                       CarRepository carRepository) {
         this.saleRepository = saleRepository;
+        this.customerRepository = customerRepository;
+        this.employeeRepository = employeeRepository;
+        this.carRepository = carRepository;
     }
 
-    public String saveSale(Sale sale) {
-        saleRepository.save(sale);
-        return "Sale saved successfully.";
+    public SaleResponse createSale(SaleRequest request) {
+        Sale sale = new Sale();
+        apply(sale, request);
+        return SaleResponse.from(saleRepository.save(sale));
     }
 
-    public List<Sale> getAllSales() {
-        return saleRepository.findAll();
+    public List<SaleResponse> getAllSales() {
+        return saleRepository.findAll().stream().map(SaleResponse::from).toList();
     }
 
-    public Optional<Sale> getSaleById(Long id) {
-        return saleRepository.findById(id);
+    public SaleResponse getSaleById(Long id) {
+        return SaleResponse.from(findOrThrow(id));
     }
 
-    public List<Sale> getSalesByCustomer(String customerId) {
-        return saleRepository.findByCustomer_Id(customerId);
+    public List<SaleResponse> getSalesByCustomer(String customerId) {
+        return saleRepository.findByCustomer_Id(customerId).stream().map(SaleResponse::from).toList();
     }
 
-    public List<Sale> getSalesByEmployee(Long employeeId) {
-        return saleRepository.findByEmployee_Id(employeeId);
+    public List<SaleResponse> getSalesByEmployee(Long employeeId) {
+        return saleRepository.findByEmployee_Id(employeeId).stream().map(SaleResponse::from).toList();
     }
 
-    public List<Sale> getSalesByPaymentMethod(Sale.PaymentMethod paymentMethod) {
-        return saleRepository.findByPaymentMethod(paymentMethod);
+    public List<SaleResponse> getSalesByPaymentMethod(Sale.PaymentMethod paymentMethod) {
+        return saleRepository.findByPaymentMethod(paymentMethod).stream().map(SaleResponse::from).toList();
     }
 
-    public String updateSale(Long id, Sale updatedSale) {
-        Optional<Sale> existing = saleRepository.findById(id);
-        if (existing.isPresent()) {
-            Sale sale = existing.get();
-            sale.setSaleDate(updatedSale.getSaleDate());
-            sale.setFinalPrice(updatedSale.getFinalPrice());
-            sale.setPaymentMethod(updatedSale.getPaymentMethod());
-            sale.setCustomer(updatedSale.getCustomer());
-            sale.setEmployee(updatedSale.getEmployee());
-            sale.setCars(updatedSale.getCars());
-            saleRepository.save(sale);
-            return "Sale updated successfully.";
+    public SaleResponse updateSale(Long id, SaleRequest request) {
+        Sale sale = findOrThrow(id);
+        apply(sale, request);
+        return SaleResponse.from(saleRepository.save(sale));
+    }
+
+    public void deleteSale(Long id) {
+        if (!saleRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Sale", id);
         }
-        return "Sale not found.";
+        saleRepository.deleteById(id);
     }
 
-    public String deleteSale(Long id) {
-        if (saleRepository.existsById(id)) {
-            saleRepository.deleteById(id);
-            return "Sale deleted successfully.";
+    private Sale findOrThrow(Long id) {
+        return saleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Sale", id));
+    }
+
+    private void apply(Sale sale, SaleRequest request) {
+        sale.setSaleDate(request.saleDate());
+        sale.setFinalPrice(request.finalPrice());
+        sale.setPaymentMethod(request.paymentMethod());
+        sale.setCustomer(resolveCustomer(request.customerId()));
+        sale.setEmployee(resolveEmployee(request.employeeId()));
+        sale.setCars(resolveCars(request.carIds()));
+    }
+
+    private Customer resolveCustomer(String customerId) {
+        return customerRepository.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer", customerId));
+    }
+
+    private Employee resolveEmployee(Long employeeId) {
+        return employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee", employeeId));
+    }
+
+    private List<Car> resolveCars(List<Long> carIds) {
+        List<Car> cars = new ArrayList<>();
+        for (Long carId : carIds) {
+            cars.add(carRepository.findById(carId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Car", carId)));
         }
-        return "Sale not found.";
+        return cars;
     }
 }

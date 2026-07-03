@@ -29,7 +29,7 @@ public class Customer {
     @Column(nullable = false)
     private String phoneNumber;
 
-    // One-to-One: one customer has one location
+    // Many-to-One: many customers can share one location
     @ManyToOne
     @JoinColumn(name = "location_id", nullable = false)
     private Location location;

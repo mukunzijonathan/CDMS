@@ -14,8 +14,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.CarDealership.model.Location;
+import com.example.CarDealership.dto.LocationRequest;
+import com.example.CarDealership.dto.LocationResponse;
 import com.example.CarDealership.service.LocationService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/locations")
@@ -28,72 +31,44 @@ public class LocationController {
     }
 
     @PostMapping(value = "/add", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> addLocation(@RequestBody Location location) {
-        String response = locationService.saveLocation(location);
-        if (response.contains("successfully")) {
-            return new ResponseEntity<>(response, HttpStatus.CREATED);
-        }
-        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    public ResponseEntity<LocationResponse> addLocation(@Valid @RequestBody LocationRequest request) {
+        return new ResponseEntity<>(locationService.createLocation(request), HttpStatus.CREATED);
     }
 
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getAllLocations() {
-        List<Location> locations = locationService.getAllLocations();
-        if (locations.isEmpty()) {
-            return new ResponseEntity<>("No locations found.", HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(locations, HttpStatus.OK);
+    public ResponseEntity<List<LocationResponse>> getAllLocations() {
+        return ResponseEntity.ok(locationService.getAllLocations());
     }
 
     @GetMapping(value = "/provinces", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getAllProvinces() {
-        List<Location> provinces = locationService.getAllProvinces();
-        if (provinces.isEmpty()) {
-            return new ResponseEntity<>("No provinces found.", HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(provinces, HttpStatus.OK);
+    public ResponseEntity<List<LocationResponse>> getAllProvinces() {
+        return ResponseEntity.ok(locationService.getAllProvinces());
     }
 
     @GetMapping(value = "/getById", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getLocationById(@RequestParam String id) {
-        return locationService.getLocationById(id)
-            .map(location -> new ResponseEntity<Object>(location, HttpStatus.OK))
-            .orElse(new ResponseEntity<>("Location not found.", HttpStatus.NOT_FOUND));
+    public ResponseEntity<LocationResponse> getLocationById(@RequestParam String id) {
+        return ResponseEntity.ok(locationService.getLocationById(id));
     }
 
     @GetMapping(value = "/children", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getChildren(@RequestParam String parentId) {
-        List<Location> children = locationService.getChildren(parentId);
-        if (children.isEmpty()) {
-            return new ResponseEntity<>("No children found.", HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(children, HttpStatus.OK);
+    public ResponseEntity<List<LocationResponse>> getChildren(@RequestParam String parentId) {
+        return ResponseEntity.ok(locationService.getChildren(parentId));
     }
 
     @GetMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getByName(@RequestParam String name) {
-        List<Location> locations = locationService.getByName(name);
-        if (locations.isEmpty()) {
-            return new ResponseEntity<>("No locations found for the specified name.", HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(locations, HttpStatus.OK);
+    public ResponseEntity<List<LocationResponse>> getByName(@RequestParam String name) {
+        return ResponseEntity.ok(locationService.getByName(name));
     }
 
     @PutMapping(value = "/update", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> updateLocation(@RequestParam String id, @RequestBody Location location) {
-        String response = locationService.updateLocation(id, location);
-        if (response.equals("Location updated successfully.")) {
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    public ResponseEntity<LocationResponse> updateLocation(@RequestParam String id,
+                                                           @Valid @RequestBody LocationRequest request) {
+        return ResponseEntity.ok(locationService.updateLocation(id, request));
     }
 
     @DeleteMapping(value = "/delete")
-    public ResponseEntity<?> deleteLocation(@RequestParam String id) {
-        String response = locationService.deleteLocation(id);
-        if (response.equals("Location deleted successfully.")) {
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    public ResponseEntity<Void> deleteLocation(@RequestParam String id) {
+        locationService.deleteLocation(id);
+        return ResponseEntity.noContent().build();
     }
 }

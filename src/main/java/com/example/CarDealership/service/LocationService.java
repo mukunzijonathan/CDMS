@@ -1,10 +1,13 @@
 package com.example.CarDealership.service;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.example.CarDealership.dto.LocationRequest;
+import com.example.CarDealership.dto.LocationResponse;
+import com.example.CarDealership.exception.DuplicateResourceException;
+import com.example.CarDealership.exception.ResourceNotFoundException;
 import com.example.CarDealership.model.Location;
 import com.example.CarDealership.repository.LocationRepository;
 
@@ -17,53 +20,62 @@ public class LocationService {
         this.locationRepository = locationRepository;
     }
 
-    public String saveLocation(Location location) {
-        if (locationRepository.existsByNameAndType(
-                location.getName(), location.getType())) {
-            return location.getType() + " already exists.";
+    public LocationResponse createLocation(LocationRequest request) {
+        if (locationRepository.existsByNameAndType(request.name(), request.type())) {
+            throw new DuplicateResourceException(request.type() + " '" + request.name() + "' already exists.");
         }
-        locationRepository.save(location);
-        return location.getType() + " saved successfully.";
+        Location location = new Location();
+        location.setName(request.name());
+        location.setType(request.type());
+        location.setParent(resolveParent(request.parentId()));
+        return LocationResponse.from(locationRepository.save(location));
     }
 
-    public List<Location> getAllLocations() {
-        return locationRepository.findAll();
+    public List<LocationResponse> getAllLocations() {
+        return locationRepository.findAll().stream().map(LocationResponse::from).toList();
     }
 
-    public Optional<Location> getLocationById(String id) {
-        return locationRepository.findById(id);
+    public LocationResponse getLocationById(String id) {
+        return LocationResponse.from(findOrThrow(id));
     }
 
-    public List<Location> getAllProvinces() {
-        return locationRepository.findByType("PROVINCE");
+    public List<LocationResponse> getAllProvinces() {
+        return locationRepository.findByType("PROVINCE").stream().map(LocationResponse::from).toList();
     }
 
-    public List<Location> getChildren(String parentId) {
-        return locationRepository.findByParent_Id(parentId);
+    public List<LocationResponse> getChildren(String parentId) {
+        return locationRepository.findByParent_Id(parentId).stream().map(LocationResponse::from).toList();
     }
 
-    public List<Location> getByName(String name) {
-        return locationRepository.findByName(name);
+    public List<LocationResponse> getByName(String name) {
+        return locationRepository.findByName(name).stream().map(LocationResponse::from).toList();
     }
 
-    public String updateLocation(String id, Location updatedLocation) {
-        Optional<Location> existing = locationRepository.findById(id);
-        if (existing.isPresent()) {
-            Location location = existing.get();
-            location.setName(updatedLocation.getName());
-            location.setType(updatedLocation.getType());
-            location.setParent(updatedLocation.getParent());
-            locationRepository.save(location);
-            return "Location updated successfully.";
+    public LocationResponse updateLocation(String id, LocationRequest request) {
+        Location location = findOrThrow(id);
+        location.setName(request.name());
+        location.setType(request.type());
+        location.setParent(resolveParent(request.parentId()));
+        return LocationResponse.from(locationRepository.save(location));
+    }
+
+    public void deleteLocation(String id) {
+        if (!locationRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Location", id);
         }
-        return "Location not found.";
+        locationRepository.deleteById(id);
     }
 
-    public String deleteLocation(String id) {
-        if (locationRepository.existsById(id)) {
-            locationRepository.deleteById(id);
-            return "Location deleted successfully.";
+    private Location findOrThrow(String id) {
+        return locationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Location", id));
+    }
+
+    private Location resolveParent(String parentId) {
+        if (parentId == null || parentId.isBlank()) {
+            return null;
         }
-        return "Location not found.";
+        return locationRepository.findById(parentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Parent location", parentId));
     }
 }

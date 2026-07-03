@@ -1,5 +1,6 @@
 package com.example.CarDealership.model;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -29,8 +30,8 @@ public class Car {
     @Column(nullable = false)
     private int year;
 
-    @Column(nullable = false)
-    private double price;
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal price;
 
     // Many-to-Many inverse side
     @ManyToMany(mappedBy = "cars")
@@ -50,8 +51,8 @@ public class Car {
     public int getYear() { return year; }
     public void setYear(int year) { this.year = year; }
 
-    public double getPrice() { return price; }
-    public void setPrice(double price) { this.price = price; }
+    public BigDecimal getPrice() { return price; }
+    public void setPrice(BigDecimal price) { this.price = price; }
 
     public List<Sale> getSales() { return sales; }
     public void setSales(List<Sale> sales) { this.sales = sales; }

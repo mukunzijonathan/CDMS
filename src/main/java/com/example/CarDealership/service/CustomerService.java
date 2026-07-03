@@ -1,69 +1,91 @@
 package com.example.CarDealership.service;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.example.CarDealership.dto.CustomerRequest;
+import com.example.CarDealership.dto.CustomerResponse;
+import com.example.CarDealership.exception.DuplicateResourceException;
+import com.example.CarDealership.exception.ResourceNotFoundException;
 import com.example.CarDealership.model.Customer;
+import com.example.CarDealership.model.Location;
 import com.example.CarDealership.repository.CustomerRepository;
+import com.example.CarDealership.repository.LocationRepository;
 
 @Service
 public class CustomerService {
 
     private final CustomerRepository customerRepository;
+    private final LocationRepository locationRepository;
 
-    public CustomerService(CustomerRepository customerRepository) {
+    public CustomerService(CustomerRepository customerRepository,
+                           LocationRepository locationRepository) {
         this.customerRepository = customerRepository;
+        this.locationRepository = locationRepository;
     }
 
-    public String saveCustomer(Customer customer) {
-        if (customerRepository.existsByEmail(customer.getEmail())) {
-            return "Email already exists.";
+    public CustomerResponse createCustomer(CustomerRequest request) {
+        if (customerRepository.existsByEmail(request.email())) {
+            throw new DuplicateResourceException("A customer with email '" + request.email() + "' already exists.");
         }
-        customerRepository.save(customer);
-        return "Customer saved successfully.";
+        Customer customer = new Customer();
+        customer.setFirstName(request.firstName());
+        customer.setLastName(request.lastName());
+        customer.setEmail(request.email());
+        customer.setPhoneNumber(request.phoneNumber());
+        customer.setLocation(resolveLocation(request.locationId()));
+        return CustomerResponse.from(customerRepository.save(customer));
     }
 
-    public List<Customer> getAllCustomers() {
-        return customerRepository.findAll();
+    public List<CustomerResponse> getAllCustomers() {
+        return customerRepository.findAll().stream().map(CustomerResponse::from).toList();
     }
 
-    public Optional<Customer> getCustomerById(String id) {
-        return customerRepository.findById(id);
+    public CustomerResponse getCustomerById(String id) {
+        return CustomerResponse.from(findOrThrow(id));
     }
 
-    public List<Customer> getCustomersByLocationName(String name) {
-        return customerRepository.findByLocation_Name(name);
+    public List<CustomerResponse> getCustomersByLocationName(String name) {
+        return customerRepository.findByLocation_Name(name).stream().map(CustomerResponse::from).toList();
     }
 
-    public List<Customer> getCustomersByProvince(String provinceName) {
-        return customerRepository.findByProvinceName(provinceName);
+    public List<CustomerResponse> getCustomersByProvince(String provinceName) {
+        return customerRepository.findByProvinceName(provinceName).stream().map(CustomerResponse::from).toList();
     }
 
-    public String updateCustomer(String id, Customer updatedCustomer) {
-        Optional<Customer> existing = customerRepository.findById(id);
-        if (existing.isPresent()) {
-            Customer customer = existing.get();
-            customer.setFirstName(updatedCustomer.getFirstName());
-            customer.setLastName(updatedCustomer.getLastName());
-            customer.setEmail(updatedCustomer.getEmail());
-            customer.setPhoneNumber(updatedCustomer.getPhoneNumber());
-            customer.setLocation(updatedCustomer.getLocation());
-            customerRepository.save(customer);
-            return "Customer updated successfully.";
+    public List<CustomerResponse> getCustomersByProvinceId(String id) {
+        return customerRepository.findByProvinceId(id).stream().map(CustomerResponse::from).toList();
+    }
+
+    public CustomerResponse updateCustomer(String id, CustomerRequest request) {
+        Customer customer = findOrThrow(id);
+        if (!customer.getEmail().equals(request.email())
+                && customerRepository.existsByEmail(request.email())) {
+            throw new DuplicateResourceException("A customer with email '" + request.email() + "' already exists.");
         }
-        return "Customer not found.";
+        customer.setFirstName(request.firstName());
+        customer.setLastName(request.lastName());
+        customer.setEmail(request.email());
+        customer.setPhoneNumber(request.phoneNumber());
+        customer.setLocation(resolveLocation(request.locationId()));
+        return CustomerResponse.from(customerRepository.save(customer));
     }
 
-    public String deleteCustomer(String id) {
-        if (customerRepository.existsById(id)) {
-            customerRepository.deleteById(id);
-            return "Customer deleted successfully.";
+    public void deleteCustomer(String id) {
+        if (!customerRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Customer", id);
         }
-        return "Customer not found.";
+        customerRepository.deleteById(id);
     }
-    public List<Customer> getCustomersByProvinceId(String id) {
-    return customerRepository.findByProvinceId(id);
-}
+
+    private Customer findOrThrow(String id) {
+        return customerRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer", id));
+    }
+
+    private Location resolveLocation(String locationId) {
+        return locationRepository.findById(locationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Location", locationId));
+    }
 }

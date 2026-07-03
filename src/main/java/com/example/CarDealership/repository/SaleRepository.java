@@ -15,6 +15,4 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
     List<Sale> findByEmployee_Id(Long employeeId);
 
     List<Sale> findByPaymentMethod(Sale.PaymentMethod paymentMethod);
-
-    boolean existsByCustomer_IdAndEmployee_Id(String customerId, Long employeeId);
 }

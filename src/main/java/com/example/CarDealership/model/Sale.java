@@ -1,5 +1,6 @@
 package com.example.CarDealership.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -27,8 +28,8 @@ public class Sale {
     @Column(nullable = false)
     private LocalDate saleDate;
 
-    @Column(nullable = false)
-    private double finalPrice;
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal finalPrice;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -64,8 +65,8 @@ public class Sale {
     public LocalDate getSaleDate() { return saleDate; }
     public void setSaleDate(LocalDate saleDate) { this.saleDate = saleDate; }
 
-    public double getFinalPrice() { return finalPrice; }
-    public void setFinalPrice(double finalPrice) { this.finalPrice = finalPrice; }
+    public BigDecimal getFinalPrice() { return finalPrice; }
+    public void setFinalPrice(BigDecimal finalPrice) { this.finalPrice = finalPrice; }
 
     public PaymentMethod getPaymentMethod() { return paymentMethod; }
     public void setPaymentMethod(PaymentMethod paymentMethod) { this.paymentMethod = paymentMethod; }

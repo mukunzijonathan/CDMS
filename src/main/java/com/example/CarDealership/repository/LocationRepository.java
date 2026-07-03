@@ -16,12 +16,9 @@ public interface LocationRepository extends JpaRepository<Location, String> {
     // Find by name
     List<Location> findByName(String name);
 
-    // Find by name and type
-    Location findByNameAndType(String name, String type);
-
     // Find all children of a parent
     List<Location> findByParent_Id(String parentId);
 
-    // existsBy check
+    // Uniqueness guard used on create
     boolean existsByNameAndType(String name, String type);
 }
