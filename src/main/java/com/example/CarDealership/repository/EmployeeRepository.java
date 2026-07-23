@@ -14,12 +14,10 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     boolean existsByEmail(String email);
 
-    Employee findByEmail(String email);
-
-    // Find by location name
+    // Find by location name (any level)
     List<Employee> findByLocation_Name(String name);
 
-    // Find employees by province — traverses tree
+    // Find employees by province — traverses tree up to 4 parent levels
     @Query("SELECT e FROM Employee e WHERE " +
            "e.location.name = :name OR " +
            "e.location.parent.name = :name OR " +
@@ -28,11 +26,12 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
            "e.location.parent.parent.parent.parent.name = :name")
     List<Employee> findByProvinceName(@Param("name") String name);
 
+    // Find employees by province UUID — traverses tree up to 4 parent levels
     @Query("SELECT e FROM Employee e WHERE " +
-       "e.location.id = :id OR " +
-       "e.location.parent.id = :id OR " +
-       "e.location.parent.parent.id = :id OR " +
-       "e.location.parent.parent.parent.id = :id OR " +
-       "e.location.parent.parent.parent.parent.id = :id")
-List<Employee> findByProvinceId(@Param("id") String id);
+           "e.location.id = :id OR " +
+           "e.location.parent.id = :id OR " +
+           "e.location.parent.parent.id = :id OR " +
+           "e.location.parent.parent.parent.id = :id OR " +
+           "e.location.parent.parent.parent.parent.id = :id")
+    List<Employee> findByProvinceId(@Param("id") String id);
 }

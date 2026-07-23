@@ -15,8 +15,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.CarDealership.model.Car;
+import com.example.CarDealership.dto.CarRequest;
+import com.example.CarDealership.dto.CarResponse;
 import com.example.CarDealership.service.CarService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/cars")
@@ -29,83 +32,50 @@ public class CarController {
     }
 
     @PostMapping(value = "/add", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> addCar(@RequestBody Car car) {
-        String response = carService.saveCar(car);
-        if (response.equals("Car saved successfully.")) {
-            return new ResponseEntity<>(response, HttpStatus.CREATED);
-        }
-        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    public ResponseEntity<CarResponse> addCar(@Valid @RequestBody CarRequest request) {
+        return new ResponseEntity<>(carService.createCar(request), HttpStatus.CREATED);
     }
 
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getAllCars() {
-        List<Car> cars = carService.getAllCars();
-        if (cars.isEmpty()) {
-            return new ResponseEntity<>("No cars found.", HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(cars, HttpStatus.OK);
+    public ResponseEntity<List<CarResponse>> getAllCars() {
+        return ResponseEntity.ok(carService.getAllCars());
     }
 
     @GetMapping(value = "/paginated", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getCarsPaginated(
+    public ResponseEntity<Page<CarResponse>> getCarsPaginated(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size) {
-        if (page < 0 || size < 1) {
-            return new ResponseEntity<>("Invalid page or size parameters.", HttpStatus.BAD_REQUEST);
-        }
-        Page<Car> cars = carService.getAllCarsPaginated(page, size);
-        return new ResponseEntity<>(cars, HttpStatus.OK);
+        return ResponseEntity.ok(carService.getAllCarsPaginated(page, size));
     }
 
     @GetMapping(value = "/sorted/price", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getCarsSortedByPrice() {
-        List<Car> cars = carService.getAllCarsSortedByPrice();
-        if (cars.isEmpty()) {
-            return new ResponseEntity<>("No cars found.", HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(cars, HttpStatus.OK);
+    public ResponseEntity<List<CarResponse>> getCarsSortedByPrice() {
+        return ResponseEntity.ok(carService.getAllCarsSortedByPrice());
     }
 
     @GetMapping(value = "/sorted/year", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getCarsSortedByYear() {
-        List<Car> cars = carService.getAllCarsSortedByYear();
-        if (cars.isEmpty()) {
-            return new ResponseEntity<>("No cars found.", HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(cars, HttpStatus.OK);
+    public ResponseEntity<List<CarResponse>> getCarsSortedByYear() {
+        return ResponseEntity.ok(carService.getAllCarsSortedByYear());
     }
 
     @GetMapping(value = "/getById", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getCarById(@RequestParam Long id) {
-        return carService.getCarById(id)
-            .map(car -> new ResponseEntity<Object>(car, HttpStatus.OK))
-            .orElse(new ResponseEntity<>("Car not found.", HttpStatus.NOT_FOUND));
+    public ResponseEntity<CarResponse> getCarById(@RequestParam Long id) {
+        return ResponseEntity.ok(carService.getCarById(id));
     }
 
     @GetMapping(value = "/brand", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getCarsByBrand(@RequestParam String brand) {
-        List<Car> cars = carService.getCarsByBrand(brand);
-        if (cars.isEmpty()) {
-            return new ResponseEntity<>("No cars found for the specified brand.", HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(cars, HttpStatus.OK);
+    public ResponseEntity<List<CarResponse>> getCarsByBrand(@RequestParam String brand) {
+        return ResponseEntity.ok(carService.getCarsByBrand(brand));
     }
 
     @PutMapping(value = "/update", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> updateCar(@RequestParam Long id, @RequestBody Car car) {
-        String response = carService.updateCar(id, car);
-        if (response.equals("Car updated successfully.")) {
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    public ResponseEntity<CarResponse> updateCar(@RequestParam Long id, @Valid @RequestBody CarRequest request) {
+        return ResponseEntity.ok(carService.updateCar(id, request));
     }
 
     @DeleteMapping(value = "/delete")
-    public ResponseEntity<?> deleteCar(@RequestParam Long id) {
-        String response = carService.deleteCar(id);
-        if (response.equals("Car deleted successfully.")) {
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    public ResponseEntity<Void> deleteCar(@RequestParam Long id) {
+        carService.deleteCar(id);
+        return ResponseEntity.noContent().build();
     }
 }

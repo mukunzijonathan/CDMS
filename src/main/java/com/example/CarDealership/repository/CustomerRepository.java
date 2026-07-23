@@ -14,12 +14,10 @@ public interface CustomerRepository extends JpaRepository<Customer, String> {
 
     boolean existsByEmail(String email);
 
-    Customer findByEmail(String email);
-
     // Find by location name (any level)
     List<Customer> findByLocation_Name(String name);
 
-    // Find customers by province — traverses tree up to 4 levels
+    // Find customers by province — traverses tree up to 4 parent levels
     @Query("SELECT c FROM Customer c WHERE " +
            "c.location.name = :name OR " +
            "c.location.parent.name = :name OR " +
@@ -28,12 +26,12 @@ public interface CustomerRepository extends JpaRepository<Customer, String> {
            "c.location.parent.parent.parent.parent.name = :name")
     List<Customer> findByProvinceName(@Param("name") String name);
 
-    // Find customers by province UUID — direct ID lookup
-@Query("SELECT c FROM Customer c WHERE " +
-       "c.location.id = :id OR " +
-       "c.location.parent.id = :id OR " +
-       "c.location.parent.parent.id = :id OR " +
-       "c.location.parent.parent.parent.id = :id OR " +
-       "c.location.parent.parent.parent.parent.id = :id")
-List<Customer> findByProvinceId(@Param("id") String id);
+    // Find customers by province UUID — traverses tree up to 4 parent levels
+    @Query("SELECT c FROM Customer c WHERE " +
+           "c.location.id = :id OR " +
+           "c.location.parent.id = :id OR " +
+           "c.location.parent.parent.id = :id OR " +
+           "c.location.parent.parent.parent.id = :id OR " +
+           "c.location.parent.parent.parent.parent.id = :id")
+    List<Customer> findByProvinceId(@Param("id") String id);
 }

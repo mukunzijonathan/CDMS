@@ -14,8 +14,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.CarDealership.model.Employee;
+import com.example.CarDealership.dto.EmployeeRequest;
+import com.example.CarDealership.dto.EmployeeResponse;
 import com.example.CarDealership.service.EmployeeService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/employees")
@@ -28,72 +31,44 @@ public class EmployeeController {
     }
 
     @PostMapping(value = "/add", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> addEmployee(@RequestBody Employee employee) {
-        String response = employeeService.saveEmployee(employee);
-        if (response.equals("Employee saved successfully.")) {
-            return new ResponseEntity<>(response, HttpStatus.CREATED);
-        }
-        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    public ResponseEntity<EmployeeResponse> addEmployee(@Valid @RequestBody EmployeeRequest request) {
+        return new ResponseEntity<>(employeeService.createEmployee(request), HttpStatus.CREATED);
     }
 
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getAllEmployees() {
-        List<Employee> employees = employeeService.getAllEmployees();
-        if (employees.isEmpty()) {
-            return new ResponseEntity<>("No employees found.", HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(employees, HttpStatus.OK);
+    public ResponseEntity<List<EmployeeResponse>> getAllEmployees() {
+        return ResponseEntity.ok(employeeService.getAllEmployees());
     }
 
     @GetMapping(value = "/getById", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getEmployeeById(@RequestParam Long id) {
-        return employeeService.getEmployeeById(id)
-            .map(employee -> new ResponseEntity<Object>(employee, HttpStatus.OK))
-            .orElse(new ResponseEntity<>("Employee not found.", HttpStatus.NOT_FOUND));
+    public ResponseEntity<EmployeeResponse> getEmployeeById(@RequestParam Long id) {
+        return ResponseEntity.ok(employeeService.getEmployeeById(id));
     }
 
     @GetMapping(value = "/location", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getByLocationName(@RequestParam String name) {
-        List<Employee> employees = employeeService.getEmployeesByLocationName(name);
-        if (employees.isEmpty()) {
-            return new ResponseEntity<>("No employees found for the specified location.", HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(employees, HttpStatus.OK);
+    public ResponseEntity<List<EmployeeResponse>> getByLocationName(@RequestParam String name) {
+        return ResponseEntity.ok(employeeService.getEmployeesByLocationName(name));
     }
 
     @GetMapping(value = "/province", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getByProvince(@RequestParam String name) {
-        List<Employee> employees = employeeService.getEmployeesByProvince(name);
-        if (employees.isEmpty()) {
-            return new ResponseEntity<>("No employees found in the specified province.", HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(employees, HttpStatus.OK);
+    public ResponseEntity<List<EmployeeResponse>> getByProvince(@RequestParam String name) {
+        return ResponseEntity.ok(employeeService.getEmployeesByProvince(name));
     }
 
     @GetMapping(value = "/provinceId", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getByProvinceId(@RequestParam String id) {
-        List<Employee> employees = employeeService.getEmployeesByProvinceId(id);
-        if (employees.isEmpty()) {
-            return new ResponseEntity<>("No employees found for the specified province.", HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<>(employees, HttpStatus.OK);
+    public ResponseEntity<List<EmployeeResponse>> getByProvinceId(@RequestParam String id) {
+        return ResponseEntity.ok(employeeService.getEmployeesByProvinceId(id));
     }
 
     @PutMapping(value = "/update", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> updateEmployee(@RequestParam Long id, @RequestBody Employee employee) {
-        String response = employeeService.updateEmployee(id, employee);
-        if (response.equals("Employee updated successfully.")) {
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    public ResponseEntity<EmployeeResponse> updateEmployee(@RequestParam Long id,
+                                                           @Valid @RequestBody EmployeeRequest request) {
+        return ResponseEntity.ok(employeeService.updateEmployee(id, request));
     }
 
     @DeleteMapping(value = "/delete")
-    public ResponseEntity<?> deleteEmployee(@RequestParam Long id) {
-        String response = employeeService.deleteEmployee(id);
-        if (response.equals("Employee deleted successfully.")) {
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    public ResponseEntity<Void> deleteEmployee(@RequestParam Long id) {
+        employeeService.deleteEmployee(id);
+        return ResponseEntity.noContent().build();
     }
 }
